@@ -72,13 +72,8 @@
     slate.appendChild(p);
   });
 
-  const button = document.createElement("button");
-  button.className = "sound";
-  button.type = "button";
-  button.textContent = "Sound on";
-
   screen.append(canvas, slate);
-  set.append(screen, button);
+  set.append(screen);
   document.body.appendChild(set);
   document.body.classList.add("night");
 
