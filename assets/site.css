@@ -1,9 +1,9 @@
 :root {
   --page: #e6e8eb;
   --panel: #ffffff;
-  --navy: #1e2b47;
-  --nav-top: #44577d;
-  --nav-bottom: #2c3b5a;
+  --navy: #2a1740;
+  --nav-top: #523470;
+  --nav-bottom: #36204f;
   --link: #2a5694;
   --text: #333333;
   --muted: #7a7f88;
@@ -53,13 +53,13 @@ body {
 .location {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #b9c3d6;
+  color: #c9b8de;
 }
 
 .tabs {
   background: linear-gradient(var(--nav-top), var(--nav-bottom));
-  border-top: 1px solid #5a6d93;
-  border-bottom: 1px solid #1a253c;
+  border-top: 1px solid #6c4d8e;
+  border-bottom: 1px solid #1c0f2c;
 }
 
 .tabs ul {
