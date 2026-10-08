@@ -1,6 +1,6 @@
 (() => {
   // ---- Settings you might change ----
-  const NIGHT_STARTS = 20; // 20 = 8 p.m. on the visitor's own clock
+  const NIGHT_STARTS = 22; // 22 = 10 p.m. on the visitor's own clock
   const NIGHT_ENDS = 6;    // 6 = 6 a.m.
   const STATIC_VOLUME = 0.12;
 
