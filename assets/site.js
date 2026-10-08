@@ -4,7 +4,6 @@
   const NIGHT_ENDS = 6;              // 6 a.m.
   const TIME_ZONE = "America/Denver"; // Mountain Time, matching the Contact page
   const KEY = "pal-office-ext";      // must match the key in encoder.html
-  const STATIC_VOLUME = 0.12;
 
   if (document.body.dataset.page !== "home" || !window.NIGHT) return;
 
@@ -107,28 +106,4 @@
     };
     requestAnimationFrame(loop);
   }
-
-  // ---- Audio static (generated in the browser, starts on tap) ----
-  let audio = null, gain = null, playing = false;
-  button.addEventListener("click", () => {
-    if (!audio) {
-      audio = new (window.AudioContext || window.webkitAudioContext)();
-      const buffer = audio.createBuffer(1, audio.sampleRate * 2, audio.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      const noise = audio.createBufferSource();
-      noise.buffer = buffer;
-      noise.loop = true;
-      const hiss = audio.createBiquadFilter();
-      hiss.type = "lowpass";
-      hiss.frequency.value = 5500;
-      gain = audio.createGain();
-      gain.gain.value = 0;
-      noise.connect(hiss).connect(gain).connect(audio.destination);
-      noise.start();
-    }
-    playing = !playing;
-    gain.gain.setTargetAtTime(playing ? STATIC_VOLUME : 0, audio.currentTime, 0.05);
-    button.textContent = playing ? "Sound off" : "Sound on";
-  });
 })();
