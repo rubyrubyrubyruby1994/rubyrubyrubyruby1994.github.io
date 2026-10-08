@@ -1,92 +1,134 @@
 (() => {
-  // ---- Settings you might change ----
-  const NIGHT_STARTS = 22; // 22 = 10 p.m. on the visitor's own clock
-  const NIGHT_ENDS = 6;    // 6 = 6 a.m.
+  // ---- Settings ----
+  const NIGHT_STARTS = 22;           // 10 p.m.
+  const NIGHT_ENDS = 6;              // 6 a.m.
+  const TIME_ZONE = "America/Denver"; // Mountain Time, matching the Contact page
+  const KEY = "pal-office-ext";      // must match the key in encoder.html
   const STATIC_VOLUME = 0.12;
 
-  const body = document.body;
+  if (document.body.dataset.page !== "home" || !window.NIGHT) return;
 
-  // ---- Day or night ----
-  // Pages marked data-fixed (204, c1, 404) keep whatever data-time they were given.
-  // On other pages, ?preview=day or ?preview=night lets you check both versions.
-  if (!body.hasAttribute("data-fixed")) {
-    const preview = new URLSearchParams(location.search).get("preview");
-    const hour = new Date().getHours();
-    const isNight = preview
-      ? preview === "night"
-      : hour >= NIGHT_STARTS || hour < NIGHT_ENDS;
-    body.dataset.time = isNight ? "night" : "day";
+  const params = new URLSearchParams(location.search);
+  if (params.has("day")) return; // ?day shows the daytime site at any hour
+
+  // ---- Is it night in Roswell? ----
+  const hour = parseInt(
+    new Intl.DateTimeFormat("en-US", { timeZone: TIME_ZONE, hour: "numeric", hourCycle: "h23" })
+      .format(new Date()),
+    10
+  ) % 24;
+  const isNightInRoswell = hour >= NIGHT_STARTS || hour < NIGHT_ENDS;
+
+  // ---- Your private preview: ?night=YOURWORD ----
+  // Only a scrambled fingerprint of the word is stored, so reading this file doesn't reveal it.
+  const fingerprint = (text) => {
+    let h = 0x811c9dc5;
+    for (const byte of new TextEncoder().encode(text)) {
+      h ^= byte;
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h.toString(16).padStart(8, "0");
+  };
+  const word = params.get("night");
+  const previewing = word !== null && fingerprint(word) === window.NIGHT.previewHash;
+
+  if (!isNightInRoswell && !previewing) return;
+
+  // ---- Unscramble the night text ----
+  let lines;
+  try {
+    const bytes = Uint8Array.from(atob(window.NIGHT.data), (c) => c.charCodeAt(0));
+    const key = new TextEncoder().encode(KEY);
+    for (let i = 0; i < bytes.length; i++) bytes[i] ^= key[i % key.length];
+    lines = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    return; // if anything is wrong with night.js, quietly stay on the daytime site
   }
 
-  const night = body.dataset.time === "night";
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // ---- Build the broadcast ----
+  const set = document.createElement("main");
+  set.className = "set";
+  const screen = document.createElement("div");
+  screen.className = "screen";
+  const canvas = document.createElement("canvas");
+  canvas.className = "static";
+  canvas.setAttribute("aria-hidden", "true");
+  const slate = document.createElement("section");
+  slate.className = "slate";
+
+  const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+  const isPhone = (s) => /^[\d\s().+-]{7,}$/.test(s) && /\d{7,}/.test(s.replace(/\D/g, ""));
+
+  lines.forEach((text, i) => {
+    const p = document.createElement("p");
+    if (i === 0) p.className = "big";
+    if (isEmail(text) || isPhone(text)) {
+      const a = document.createElement("a");
+      a.href = isEmail(text) ? "mailto:" + text : "tel:+1" + text.replace(/\D/g, "").replace(/^1/, "");
+      a.textContent = text;
+      p.appendChild(a);
+    } else {
+      p.textContent = text;
+    }
+    slate.appendChild(p);
+  });
+
+  const button = document.createElement("button");
+  button.className = "sound";
+  button.type = "button";
+  button.textContent = "Sound on";
+
+  screen.append(canvas, slate);
+  set.append(screen, button);
+  document.body.appendChild(set);
+  document.body.classList.add("night");
 
   // ---- Visual static ----
-  // Drawn at a tiny resolution and scaled up, so it looks chunky like an old set.
-  const canvas = document.querySelector("canvas.static");
-  if (canvas && night) {
-    canvas.width = 160;
-    canvas.height = 120;
-    const ctx = canvas.getContext("2d");
-    const frame = ctx.createImageData(canvas.width, canvas.height);
-    const px = frame.data;
-
-    const draw = () => {
-      for (let i = 0; i < px.length; i += 4) {
-        const v = Math.random() * 255;
-        px[i] = px[i + 1] = px[i + 2] = v;
-        px[i + 3] = 255;
-      }
-      ctx.putImageData(frame, 0, 0);
-    };
-
-    if (reduceMotion) {
-      draw(); // one still frame
-    } else {
-      let last = 0;
-      const loop = (t) => {
-        if (t - last > 33) { draw(); last = t; } // about 30 frames a second
-        requestAnimationFrame(loop);
-      };
-      requestAnimationFrame(loop);
+  canvas.width = 160;
+  canvas.height = 120;
+  const ctx = canvas.getContext("2d");
+  const frame = ctx.createImageData(canvas.width, canvas.height);
+  const px = frame.data;
+  const draw = () => {
+    for (let i = 0; i < px.length; i += 4) {
+      const v = Math.random() * 255;
+      px[i] = px[i + 1] = px[i + 2] = v;
+      px[i + 3] = 255;
     }
+    ctx.putImageData(frame, 0, 0);
+  };
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    draw();
+  } else {
+    let last = 0;
+    const loop = (t) => {
+      if (t - last > 33) { draw(); last = t; }
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
   }
 
-  // ---- Audio static ----
-  // Generated in the browser, so there's no audio file to host.
-  // Browsers block sound until someone taps, which is what the button is for.
-  const button = document.querySelector("button.sound");
-  if (button && night) {
-    let audio = null;
-    let gain = null;
-    let playing = false;
-
-    button.addEventListener("click", () => {
-      if (!audio) {
-        audio = new (window.AudioContext || window.webkitAudioContext)();
-        const seconds = 2;
-        const buffer = audio.createBuffer(1, audio.sampleRate * seconds, audio.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-
-        const noise = audio.createBufferSource();
-        noise.buffer = buffer;
-        noise.loop = true;
-
-        const hiss = audio.createBiquadFilter(); // softens it into TV hiss
-        hiss.type = "lowpass";
-        hiss.frequency.value = 5500;
-
-        gain = audio.createGain();
-        gain.gain.value = 0;
-
-        noise.connect(hiss).connect(gain).connect(audio.destination);
-        noise.start();
-      }
-
-      playing = !playing;
-      gain.gain.setTargetAtTime(playing ? STATIC_VOLUME : 0, audio.currentTime, 0.05);
-      button.textContent = playing ? "Sound off" : "Sound on";
-    });
-  }
+  // ---- Audio static (generated in the browser, starts on tap) ----
+  let audio = null, gain = null, playing = false;
+  button.addEventListener("click", () => {
+    if (!audio) {
+      audio = new (window.AudioContext || window.webkitAudioContext)();
+      const buffer = audio.createBuffer(1, audio.sampleRate * 2, audio.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      const noise = audio.createBufferSource();
+      noise.buffer = buffer;
+      noise.loop = true;
+      const hiss = audio.createBiquadFilter();
+      hiss.type = "lowpass";
+      hiss.frequency.value = 5500;
+      gain = audio.createGain();
+      gain.gain.value = 0;
+      noise.connect(hiss).connect(gain).connect(audio.destination);
+      noise.start();
+    }
+    playing = !playing;
+    gain.gain.setTargetAtTime(playing ? STATIC_VOLUME : 0, audio.currentTime, 0.05);
+    button.textContent = playing ? "Sound off" : "Sound on";
+  });
 })();
