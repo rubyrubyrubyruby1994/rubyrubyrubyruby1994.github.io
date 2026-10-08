@@ -4,33 +4,38 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Viewer Line</title>
+  <title>Public Access Ltd.</title>
   <link rel="stylesheet" href="/assets/site.css">
+  <script src="/assets/night.js" defer></script>
   <script src="/assets/site.js" defer></script>
 </head>
-<!-- data-time="day" is the default if JavaScript is off. site.js switches it to "night" after dark. -->
-<body data-time="day">
-  <main class="set">
-    <div class="screen">
-      <canvas class="static" aria-hidden="true"></canvas>
-
-      <!-- DAYTIME VERSION: edit this text between sessions -->
-      <section class="slate" data-show="day">
-        <p class="warning">Do not read this to other players.</p>
-        <h1>Viewer line</h1>
-        <p>Our offices are closed.</p>
-        <p>Please call back after sign-off.</p>
-      </section>
-
-      <!-- NIGHTTIME VERSION: edit this text between sessions -->
-      <section class="slate" data-show="night">
-        <p class="warning">Do not read this to other players.</p>
-        <p class="big">A missed broadcast cannot be repeated.</p>
-        <!-- Change both the link and the visible number to your Google Voice number. Tapping it dials on a phone. -->
-        <p class="number"><a href="tel:+15055550142">(505) 555-0142</a></p>
-      </section>
-    </div>
-    <button class="sound" type="button" data-show="night">Sound on</button>
-  </main>
+<body data-page="home">
+  <div class="page">
+    <header class="masthead">
+      <div class="masthead-inner">
+        <a class="wordmark" href="/">Public Access Ltd.</a>
+        <p class="tagline">Television production</p>
+      </div>
+      <p class="location">Roswell, New Mexico</p>
+    </header>
+    <nav class="tabs" aria-label="Main">
+      <ul>
+        <li><a href="/" aria-current="page">Home</a></li>
+        <li><a href="/about/">About</a></li>
+        <li><a href="/productions/">Productions</a></li>
+        <li><a href="/contact/">Contact</a></li>
+        <li><a href="/cast-and-crew/">Cast and crew</a></li>
+      </ul>
+    </nav>
+    <main class="content">
+      <h1>Welcome</h1>
+      <p>Public Access Ltd. develops and produces scripted television. Our offices are located in Roswell, New Mexico.</p>
+      <p>For general inquiries, please visit our <a href="/contact/">contact page</a>.</p>
+    </main>
+    <footer class="footer">
+      <p>&copy; 2025 Public Access Ltd. All rights reserved.</p>
+      <p>Last updated June 2025</p>
+    </footer>
+  </div>
 </body>
 </html>
